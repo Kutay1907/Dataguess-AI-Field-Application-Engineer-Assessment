@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge AI Analytics Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="app-layout">
+
+        <!-- TOP NAVIGATION -->
+        <header class="top-nav">
+            <div class="brand">
+                <span class="logo-icon">👁️</span>
+                <h1>Vision AI <span class="subtitle">Analytics</span></h1>
+            </div>
+
+            <div class="toolbar">
+                <div class="source-info">
+                    <span class="label">Source:</span>
+                    <span id="currentSource" class="value">Default Video</span>
+                </div>
+
+                <div class="controls">
+                    <button id="startBtn" class="btn btn-primary">
+                        <span class="icon">▶</span> Start
+                    </button>
+                    <button id="stopBtn" class="btn btn-danger" disabled>
+                        <span class="icon">⏹</span> Stop
+                    </button>
+
+                    <div class="upload-wrapper">
+                        <label for="videoUpload" class="btn btn-secondary">
+                            <span class="icon">📂</span> Upload
+                        </label>
+                        <input type="file" id="videoUpload" accept="video/*" class="hidden-input">
+                    </div>
+                </div>
+
+                <div id="engineStatus" class="status-badge status-idle">
+                    <span class="status-dot idle"></span> Idle
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT GRID -->
+        <main class="dashboard-grid">
+
+            <!-- LEFT: VIDEO STREAM -->
+            <section class="video-section card">
+                <div class="video-container">
+                    <img id="videoStream" src="" alt="Live Stream" style="display:none;">
+                    <div id="videoPlaceholder" class="placeholder">
+                        <div class="placeholder-content">
+                            <span class="icon-large">📺</span>
+                            <h3>Stream Idle</h3>
+                            <p>Click Start to initialize engine</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT: LIVE COUNTS -->
+            <section class="counts-section card">
+                <div class="card-header">
+                    <h2>Live Detections</h2>
+                    <span class="live-dot"></span>
+                </div>
+                <ul id="objectList" class="counts-list">
+                    <!-- Populated by JS -->
+                </ul>
+            </section>
+
+            <!-- BOTTOM: METRICS & GRAPHS -->
+            <section class="metrics-section">
+                <!-- METRIC CARDS -->
+                <div class="metrics-row">
+                    <div class="metric-card">
+                        <span class="metric-title">FPS</span>
+                        <span class="metric-value big" id="metric-fps">-</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-title">Latency</span>
+                        <span class="metric-value big" id="metric-latency">-</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-title">Objects</span>
+                        <span class="metric-value big" id="metric-count">-</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-title">Backend</span>
+                        <span class="metric-value text" id="metric-backend">-</span>
+                    </div>
+                </div>
+
+                <!-- FPS GRAPH -->
+                <div class="graph-card card">
+                    <div class="card-header-small">
+                        <h3>FPS History (60 Frames)</h3>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="fpsChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Main Entry Point (Module) -->
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,36 @@
+# System
+.DS_Store
+__pycache__/
+*.py[cod]
+
+# Environments
+.venv/
+venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+
+# Large Data & Artifacts
+datasets/
+models/*.pt
+models/*.onnx
+models/*.engine
+*.mp4
+*.avi
+*.jpg
+*.png
+logs/
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Tests
+.pytest_cache/
+.coverage
+
+# Specific user files (if any temp ones)
+temp/
