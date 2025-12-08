@@ -1,7 +1,7 @@
 # AI FAE CV Technical Assessment
 
 ## Overview
-This project implements a complete Edge AI Video Analytics System capable of detecting and tracking objects in real-time using **YOLOv8** and **ByteTrack**. It features a robust inference engine, a REST API for deployment, and a monitoring system.
+This project implements a complete Edge AI Video Analytics System capable of detecting and tracking objects in real-time using **YOLOv8** and **ByteTrack**. It features a robust inference engine, a REST API for deployment, a monitoring system, and a **Traffic Analytics Extension** for flow counting and density estimation.
 
 ## Project Structure
 ```

@@ -250,9 +250,31 @@ flowchart LR
 
 ---
 
-## 5. Performance Analysis
+## 5. Stage 11: Traffic Analytics Extension
 
-### 5.1. Benchmark Methodology
+**Objective**: Provide high-level insights (Vehicle Flow, Traffic Density) beyond simple raw detections.
+
+*   **Vehicle Counter (`inference/traffic_counter.py`)**:
+    *   **Algorithm**: Sliding Window Counting.
+    *   **Logic**:
+        *   Maintains a deque of vehicle "events" (timestamps of when a unique track ID was actively seen).
+        *   Filters events falling outside the configurable window (default 60 seconds).
+        *   **Deduplication**: A `track_id` is effectively counted once per window to represent "Flow per Minute".
+*   **Density Estimation**:
+    *   Calculates a density level based on the unique count `N` in the last 60s:
+        *   **Low**: $N \le 20$
+        *   **Medium**: $20 < N \le 50$
+        *   **High**: $N > 50$
+    *   *Configuration*: Thresholds can be tuned per camera via the `VehicleCounter` constructor.
+*   **Integration**:
+    *   The module runs inside the `VideoEngine` loop after the tracker update.
+    *   Metrics are atomically updated in the shared state lock to ensure the API always serves consistent data.
+
+---
+
+## 6. Performance Analysis
+
+### 6.1. Benchmark Methodology
 Tests were conducted on the Apple M2 Air (8GB RAM).
 *   **Input**: 640x640x3 Dummy Tensor.
 *   **Iterations**: 100 (after 10 warmup runs).
