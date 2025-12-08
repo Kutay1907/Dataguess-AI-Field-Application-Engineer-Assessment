@@ -3,10 +3,10 @@ import numpy as np
 import onnxruntime as ort
 import torch
 import time
-from .utils import letterbox, non_max_suppression, scale_boxes, draw_detections
+from .utils import letterbox, non_max_suppression, scale_boxes, draw_detections, select_device
 
 class Detector:
-    def __init__(self, model_path, backend='onnx', conf_thres=0.25, iou_thres=0.45, device='cpu'):
+    def __init__(self, model_path, backend='onnx', conf_thres=0.25, iou_thres=0.45, device=None):
         """
         Initializes the Detector with specified backend.
 
@@ -15,25 +15,26 @@ class Detector:
             backend (str): 'onnx' or 'pytorch'
             conf_thres (float): Confidence threshold for NMS
             iou_thres (float): IoU threshold for NMS
-            device (str): Device to run inference on ('cpu', 'cuda', 'mps')
+            device (str): Device to run inference on ('cpu', 'cuda', 'mps') - Auto-selected if None
         """
+        self.device = select_device(device)
         self.backend = backend
         self.conf_thres = conf_thres
         self.iou_thres = iou_thres
-        self.device = device
         self.model_path = model_path
         self.profiling_data = {'preprocess': 0.0, 'inference': 0.0, 'postprocess': 0.0, 'count': 0}
         
-        print(f"Loading model {model_path} with backend {backend} on {device}...")
+        print(f"Loading model {model_path} with backend {backend} on {self.device}...")
 
         if backend == 'onnx':
             providers = ['CPUExecutionProvider']
-            if device == 'cuda':
+            if self.device == 'cuda':
                 providers.insert(0, 'CUDAExecutionProvider')
-            elif device == 'mps':
-                # ORT MPS support is experimental/limited, sticking to CPU or specific provider if available
-                # For now default to CPU for Mac unless configured
-                pass
+            elif self.device == 'mps':
+                # Attempt to use CoreMLExecutionProvider or just fallback to CPU for stability on Mac/ONNX
+                # MPS provider for ONNX is still very experimental/limited support
+                if 'CoreMLExecutionProvider' in ort.get_available_providers():
+                    providers.insert(0, 'CoreMLExecutionProvider')
             
             # Optimization Options
             sess_options = ort.SessionOptions()
