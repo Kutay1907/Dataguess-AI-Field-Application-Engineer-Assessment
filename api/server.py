@@ -218,5 +218,8 @@ def get_metrics():
         "average_latency_seconds": avg_latency,
         "device": "cuda" if detector and detector.device == 'cuda' else "cpu",
         "model_loaded": detector is not None,
-        "video_engine": video_engine.runtime_metrics if video_engine else None
+        "video_engine": video_engine.runtime_metrics if video_engine else None,
+        "traffic_total_count": video_engine.runtime_metrics.get("traffic_total_count", 0) if video_engine else 0,
+        "traffic_density_level": video_engine.runtime_metrics.get("traffic_density_level", "Low") if video_engine else "Low",
+        "traffic_per_class": video_engine.runtime_metrics.get("traffic_per_class", {}) if video_engine else {}
     }

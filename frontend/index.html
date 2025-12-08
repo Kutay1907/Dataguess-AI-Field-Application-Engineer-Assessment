@@ -54,6 +54,26 @@
         <!-- MAIN CONTENT GRID -->
         <main class="dashboard-grid">
 
+            <!-- Traffic Analytics -->
+            <div class="metrics-card">
+                <h3>🚦 Traffic Analytics (60s)</h3>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div>
+                        <span style="font-size: 0.9em; color: #888;">Density</span>
+                        <div id="traffic-density" style="font-size: 1.2em; font-weight: bold; color: #4ade80;">Low</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.9em; color: #888;">Total Flow</span>
+                        <div id="traffic-total" style="font-size: 1.2em; font-weight: bold;">0</div>
+                    </div>
+                </div>
+
+                <div class="object-list" id="traffic-list">
+                    <!-- Traffic breakdown items will go here -->
+                </div>
+            </div>
+
             <!-- LEFT: VIDEO STREAM -->
             <section class="video-section card">
                 <div class="video-container">

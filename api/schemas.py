@@ -19,3 +19,6 @@ class DetectionResponse(BaseModel):
     inference_time: float = Field(..., description="Inference time in seconds")
     image_size: List[int] = Field(..., description="Image size [width, height]")
     backend: str = Field(..., description="Backend used for inference (onnx/pytorch)")
+    traffic_total_count: int = Field(0, description="Unique vehicles in window")
+    traffic_density_level: str = Field("Low", description="Traffic density level")
+    traffic_per_class: dict[str, int] = Field({}, description="Counts per class in window")

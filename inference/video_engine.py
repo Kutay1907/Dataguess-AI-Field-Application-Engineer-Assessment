@@ -14,6 +14,7 @@ from inference.tracker import ByteTracker
 from monitoring.fps_meter import FPSMeter
 from monitoring.logger import setup_logger
 from inference.fusion import FusionVisualizer
+from inference.traffic_counter import VehicleCounter
 
 class VideoEngine:
     def update_source(self, new_source):
@@ -49,6 +50,7 @@ class VideoEngine:
         self.detector = Detector(model_path=model_path, backend=backend)
         self.tracker = ByteTracker(track_thresh=0.5, track_buffer=30, match_thresh=0.8)
         self.visualizer = FusionVisualizer()
+        self.vehicle_counter = VehicleCounter() # Default 60s window
         
         # Queues
         # Use simple Queue for thread safety
@@ -164,6 +166,10 @@ class VideoEngine:
                     # Update Tracker
                     tracks = self.tracker.update(detections)
                     
+                    # Update Traffic Counter
+                    now_ts = time.time()
+                    self.vehicle_counter.update(tracks, now_ts)
+                    
                     # Log Detection Event
                     if len(detections) > 0:
                         self.logger.debug("Detection Event", extra={
@@ -189,40 +195,25 @@ class VideoEngine:
                 cv2.putText(vis_frame, f"FPS: {self.fps:.1f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                 # cv2.putText(vis_frame, f"Backend: {self.detector.backend}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
                 
-                # Calculate Class Counts
+                # Calculate Class Counts (Current Frame)
                 class_counts = {}
                 for t in tracks:
-                    # Tracker tracks usually preserve class_id or we can stick to just counting
-                    # Assuming we can get class name from detector if stored, or just use ID
-                    # ByteTrack simple implementation might not propagate class name easily if not customized
-                    # But let's assume valid tracks have a .class_id or we map it somehow.
-                    # For this demo, let's look at how tracker is implemented or just count total for now if unsure.
-                    # Checking tracker code... actually `t.score` etc.
-                    # Let's trust we passed detections with class_ids.
-                    # Check if STrack has class_id? Usually they act as the class of the first detection.
-                    
-                    # If using standard ByteTrack, it might be tricky.
-                    # But we can try to get it. 
-                    # If not available, we will just say "Object"
                     c_id = getattr(t, 'class_id', -1)
-                    if c_id == -1:
-                        # Try to get from score or other attributes if mixed up, but likely correct
-                        pass
-                        
-                    label = f"Class {int(c_id)}" # Default
+                    label = f"Class {int(c_id)}"
                     if hasattr(self.detector, 'names'):
                         try:
-                            # Handle both string/int keys/values safely
                             c_id_int = int(c_id)
                             if c_id_int in self.detector.names:
                                 label = self.detector.names[c_id_int]
                         except:
                             pass
-                    
                     class_counts[label] = class_counts.get(label, 0) + 1
-                
-                # Debug print to trace if counts are working
-                # print(f"DEBUG: Tracks: {len(tracks)}, Class Counts: {class_counts}")
+
+                # Traffic Analytics (Windowed)
+                now_ts = time.time()
+                traffic_total = self.vehicle_counter.get_total_count(now_ts)
+                traffic_density = self.vehicle_counter.get_density_level(now_ts)
+                traffic_counts = self.vehicle_counter.get_window_counts(now_ts)
 
                 # Update Shared State
                 with self.lock:
@@ -232,7 +223,10 @@ class VideoEngine:
                         "latency_ms": detection_latency * 1000 if do_detect else 0,
                         "detection_count": len(tracks),
                         "backend": self.detector.backend,
-                        "class_counts": class_counts
+                        "class_counts": class_counts,
+                        "traffic_total_count": traffic_total,
+                        "traffic_density_level": traffic_density,
+                        "traffic_per_class": traffic_counts
                     })
 
                 try:
