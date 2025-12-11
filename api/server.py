@@ -20,42 +20,70 @@ video_engine = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Load model on startup.
+    Load model on startup. Cloud-compatible: gracefully handles missing resources.
     """
-    # Initialize Global Video Engine
-    global detector
-    # We will use the detector inside the engine for single image requests too, 
-    # or keep a separate one. For simplicity and resource saving, let's keep separate 
-    # if we want double duty, but the prompt implies a shift to video.
-    # However, existing /detect endpoint relies on global 'detector'.
-    # Let's instantiate VideoEngine, which has its own detector.
+    global detector, video_engine
     
-    # We can use a test video or webcam. Let's default to a test video for "local" demo 
-    # or webcam if requested. User said "local browser UI", implying maybe webcam or file.
-    # Let's use '0' (webcam) as default source, or a dummy file if not available?
-    # User prompt didn't specify source, but "Real-Time Video processing" usually implies camera.
-    # Let's try to find a video file first to be safe (sync_track.mp4 or similar), else 0.
+    # Try to find a model file - check multiple locations
+    model_paths = [
+        "models/model.onnx",
+        "models/latest.pt",
+        "yolov8n.pt",  # Fallback to root-level model
+        os.environ.get("MODEL_PATH", "")
+    ]
     
-    source = "datasets/test_video.mp4"
-    if not os.path.exists(source):
-        print(f"Warning: {source} not found. Attempting webcam 0.")
-        source = 0
-        
-    model_path = "models/model.onnx"
-    backend = "onnx"
-    if not os.path.exists(model_path):
-        model_path = "models/latest.pt"
-        backend = "pytorch"
-
-    global video_engine
-    print(f"Initializing VideoEngine with source={source}, model={model_path}...")
-    video_engine = VideoEngine(source=source, model_path=model_path, backend=backend)
+    model_path = None
+    backend = "pytorch"
     
-    # Also keep standalone detector for /detect if needed, or reuse engine's detector
-    # Reusing engine's detector is cleaner to avoid 2 models in memory
-    detector = video_engine.detector 
+    for path in model_paths:
+        if path and os.path.exists(path):
+            model_path = path
+            backend = "onnx" if path.endswith(".onnx") else "pytorch"
+            break
+    
+    if model_path:
+        print(f"Found model at: {model_path}")
+        try:
+            # Try to initialize standalone detector for /detect endpoint
+            detector = Detector(model_path=model_path, backend=backend)
+            print(f"Detector initialized with backend: {backend}")
+        except Exception as e:
+            print(f"Warning: Failed to initialize detector: {e}")
+            detector = None
+    else:
+        print("Warning: No model found. /detect endpoint will be unavailable.")
+        print("Set MODEL_PATH environment variable or place model in models/ directory.")
+        detector = None
+    
+    # Video engine is optional in cloud - only initialize if video source exists
+    video_sources = [
+        os.environ.get("VIDEO_SOURCE", ""),
+        "datasets/test_video.mp4",
+        "sync_track.mp4"
+    ]
+    
+    source = None
+    for src in video_sources:
+        if src and os.path.exists(src):
+            source = src
+            break
+    
+    if source and model_path:
+        try:
+            print(f"Initializing VideoEngine with source={source}, model={model_path}...")
+            video_engine = VideoEngine(source=source, model_path=model_path, backend=backend)
+            # Use video engine's detector if standalone failed
+            if detector is None:
+                detector = video_engine.detector
+        except Exception as e:
+            print(f"Warning: Failed to initialize VideoEngine: {e}")
+            video_engine = None
+    else:
+        print("Video source not found. Video streaming endpoints will be unavailable.")
+        video_engine = None
             
     yield
+    
     if video_engine:
         video_engine.stop()
     print("Shutting down...")

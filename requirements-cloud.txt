@@ -1,0 +1,21 @@
+# CPU-only PyTorch for cloud deployment (much smaller)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+
+# Core ML dependencies
+ultralytics
+numpy<2.0
+scipy
+filterpy
+
+# ONNX runtime (CPU-only, lighter)
+onnxruntime
+
+# API dependencies
+fastapi
+uvicorn[standard]
+python-multipart
+
+# OpenCV headless (no GUI, smaller)
+opencv-python-headless

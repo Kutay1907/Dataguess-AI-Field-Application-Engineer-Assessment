@@ -1,0 +1,63 @@
+# Virtual environment
+.venv/
+venv/
+env/
+.env
+
+# Git
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.pytest_cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Models (will download at runtime or mount)
+*.pt
+*.onnx
+models/
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.jpg
+*.jpeg
+*.png
+*.gif
+datasets/
+
+# Logs
+logs/
+*.log
+
+# macOS
+.DS_Store
+
+# Docker files we don't need in the image
+api/docker/
+docker_build_intel.sh
+
+# Documentation (not needed in runtime)
+docs/
+*.md
+!README.md
+
+# Tests (not needed in production)
+tests/
